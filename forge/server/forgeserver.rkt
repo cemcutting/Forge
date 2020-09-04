@@ -19,7 +19,7 @@
 
 ; name is the name of the model
 ; get-next-model returns the next model each time it is called, or #f.
-(define (display-model get-next-model name command filepath bitwidth funs-n-preds)
+(define (display-model get-next-model name command filepath bitwidth funs-n-preds [show #t])
   (define model (get-next-model))
   ;(printf "Instance : ~a~n" model)
   (define chan (make-async-channel))
@@ -92,10 +92,11 @@
 
   (define port (async-channel-get chan))
 
-  (cond [(string? port)
+  (when show 
+        (cond [(string? port)
          (displayln "NO PORTS AVAILABLE!!")]
         [else
          (send-url/file sterling-path #f #:query (number->string port))
          (printf "Sterling running. Hit enter to stop service.\n")
          (void (read-char))
-         (stop-service)]))
+         (stop-service)])))

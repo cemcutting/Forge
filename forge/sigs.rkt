@@ -4,6 +4,7 @@
          "kodkod-cli/server/kks.rkt" "kodkod-cli/server/server.rkt"
          "kodkod-cli/server/server-common.rkt" "translate-to-kodkod-cli.rkt" "translate-from-kodkod-cli.rkt" racket/stxparam br/datum
          "breaks.rkt"
+         "characteristic.rkt"
          "demo/life.rkt")
 
 ; racket/string needed for replacing transpose operator (~) with escaped version in error messages
@@ -56,7 +57,11 @@
 ; core granularity and log translation --- affect core quality (see kodkod docs)
 (define coregranoption 0)
 (define logtransoption 1)
+(define showoption #t)
 (define demo #f)
+(define boundsyoption #t)
+(define writeoption #f)
+(define readoption #f)
 
 ; set of one sigs
 (define one-sigs (mutable-set))
@@ -96,8 +101,8 @@
 ; Filter options to prevent user from rewriting any global
 ; Note that we cannot use dash in option names
 (define (set-option key val)
-  (println key)
-  (println val)
+  ;(println key)
+  ;(println val)
   (match key
     ['solver (set! solveroption val)]
     ['verbosity (set-verbosity val)]
@@ -105,11 +110,33 @@
     ['coregranularity (set! coregranoption val)]
     ['sb (set! sboption val)]
     ['logtranslation (set! logtransoption val)]
+    ['show (set! showoption (equal? val '|1|))]
+    ['boundsy (set! boundsyoption (equal? val '|1|))]
+    ['write (set! writeoption (equal? val '|1|))]
+    ['read (set! readoption (read (open-input-string (symbol->string val))))]
     ['demo
      (match val
        ['life (set! demo 'life)]
        [else (error (format "Invalid option key: ~a" key))])]
     [else (error (format "Invalid option key: ~a" key))]))
+
+(define process-command-line-args
+  (command-line
+    #:usage-help "FORGE!"
+    #:once-each
+    [("-v" "--verbose" "--verbosity") VERBOSITY "set verbosity" 
+      (set-option 'verbosity (string->number VERBOSITY))]
+    [("--show") SHOW "whether to open visualizer" 
+      (set-option 'show SHOW)]
+    [("--boundsy") BOUNDSY "whether to allow boundsy breaks" 
+      (set-option 'boundsy (string->symbol BOUNDSY))]
+    [("--write") "whether to write instances to stdout" 
+      (set-option 'write '|1|)
+      (set-option 'show 0)]
+    [("--read") READ "input instance" 
+      (set-option 'read (string->symbol READ))
+      (set-option 'show 0)]
+    #:args () (void)))
 
 (define (set-bitwidth i) (set! bitwidth i))
 
@@ -418,8 +445,6 @@
     (hash-set! bindings rel (for/list ([tup (sbound-upper sb)]) (car tup))) ; this nonsense is just for atom names
   )
 
-  ;(error "stop")
-
   (set! run-constraints (append constraints assumptions))
 
   (for ([rel (in-set one-sigs)]) (update-int-bound rel (int-bound 1 1)))
@@ -454,6 +479,10 @@
   (define successor-rel (map list (take int-range (sub1 (length int-range))) (rest int-range)))
   (set! total-bounds (append total-bounds (list (bound succ successor-rel successor-rel))))
   (set! rels (append rels (list succ)))
+
+  (when readoption 
+    (printf "chi(I) : ~v~n" (inst-to-formula readoption rels))
+    (cons! run-constraints (inst-to-formula readoption rels)))
 
   ; Initializing our kodkod-cli process, and getting ports for communication with it
   (define kks (new server%
@@ -490,10 +519,14 @@
         (tupleset #:tuples int-atoms)))
 
 
-  (define-values (new-total-bounds new-formulas)
-    (constrain-bounds total-bounds sigs upper-bounds relations-store extensions-store))
-  (set! total-bounds new-total-bounds)
-  (set! run-constraints (append run-constraints new-formulas))
+  (if boundsyoption 
+    (let-values ([(new-total-bounds new-formulas)
+                  (constrain-bounds total-bounds sigs upper-bounds relations-store extensions-store)])
+      (set! total-bounds new-total-bounds)
+      (set! run-constraints (append run-constraints new-formulas)))
+    (let ([new-formulas (constrain-formulas upper-bounds relations-store)])
+      (set! run-constraints (append run-constraints new-formulas)))
+  )
 
   (when is-exact
     (for ([b total-bounds])
@@ -531,11 +564,20 @@
      (define (get-next-model)
        (cmd [stdin] (solve))
        (match-define (cons restype inst) (translate-from-kodkod-cli runtype (read-solution stdout) rels inty-univ))
+       (when (and readoption inst (equal? restype 'sat)) 
+        (printf "INSTANCE : ~a~n" inst))
+       (when (and writeoption inst (equal? restype 'sat))
+        (printf "INSTANCE : ~a~n" inst)
+        ; TODO: make interactive:
+        ;(sleep 0.01)
+        ;(display "press enter for another... ")
+        ;(define wait (read-line))
+        (display-model get-next-model name command filepath bitwidth funs-n-preds showoption))
        (when (and demo (equal? restype 'sat))
          (match demo
            ['life (output-life inst)]))
        (cons restype inst))
-     (display-model get-next-model name command filepath bitwidth funs-n-preds)]))
+     (display-model get-next-model name command filepath bitwidth funs-n-preds showoption)]))
 
 (define-syntax (run stx)
   (define command (format "~a" stx))

@@ -1,0 +1,19 @@
+// this file tests two inequivalent files and gives a true negative
+// P=isoEx.rkt has `f if bij` but Q=isoEx2.rkt does not
+// All P instances satsify Q, but not vice versa
+
+[168] iso $ ./isotest.py "racket isoEx.rkt" "racket isoEx2.rkt"
+Testing: P ≅ Q for P="racket isoEx.rkt", Q="racket isoEx2.rkt"        
+        Testing: ∀I(I⊧P => ∃J(J⊧Q and J≅I))
+                Testing: I=#hash((A . ((A0) (A1))) (f . ((A0 B0) (A1 B1))) (g . ((B0 A1) (B1 A0))) (Int . ((-8) (-7) (-6) (-5) (-4) (-3) (-2) (-1) (0) (1) (2) (3) (4) (5) (6) (7))) (B . ((B0) (B1))))
+                Passed: J=#hash((Int . ((-8) (-7) (-6) (-5) (-4) (-3) (-2) (-1) (0) (1) (2) (3) (4) (5) (6) (7))) ($v3 . ((A1))) ($v4 . ((B0))) (g . ((B0 A0) (B1 A1))) ($v1 . ((A0))) (A . ((A0) (A1))) ($v2 . ((B1))) (f . ((A0 B1) (A1 B0))) (B . ((B0) (B1))))
+                Testing: I=#hash((A . ((A0) (A1))) (f . ((A0 B0) (A1 B1))) (g . ((B0 A0) (B1 A1))) (Int . ((-8) (-7) (-6) (-5) (-4) (-3) (-2) (-1) (0) (1) (2) (3) (4) (5) (6) (7))) (B . ((B0) (B1))))
+                Passed: J=#hash((Int . ((-8) (-7) (-6) (-5) (-4) (-3) (-2) (-1) (0) (1) (2) (3) (4) (5) (6) (7))) ($v3 . ((A0))) ($v4 . ((B0))) (g . ((B0 A0) (B1 A1))) ($v1 . ((A1))) (A . ((A0) (A1))) ($v2 . ((B1))) (f . ((A0 B0) (A1 B1))) (B . ((B0) (B1))))
+        Passed: ∀I(I⊧P => ∃J(J⊧Q and J≅I))
+        Testing: ∀J(J⊧Q => ∃I(I⊧P and I≅J))
+                Testing: J=#hash((A . ((A0) (A1))) (f . ()) (g . ((B0 A0) (B1 A1))) (Int . ((-8) (-7) (-6) (-5) (-4) (-3) (-2) (-1) (0) (1) (2) (3) (4) (5) (6) (7))) (B . ((B0) (B1))))
+                Passed: I=((some v1: one r3 | (some v2: one r2 | (some v3: one r3 | (some v4: one r2 | ((r3 = (v3 + v1)) && (no r1 && ((r2 = (v4 + v2)) && ((r0 = ((v4 -> v3) + (v2 -> v1))) && (!(v3 = v1) && (!(v1 = v3) && (!(v4 = v2) && !(v2 = v4)))))))))))) (all v1: one r3 | one (r0 . v1)) (all v1: one r2 | one (v1 . r0)))
+                Testing: J=#hash((A . ((A0) (A1))) (f . ((A0 B1) (A1 B0))) (g . ((B0 A0) (B1 A1))) (Int . ((-8) (-7) (-6) (-5) (-4) (-3) (-2) (-1) (0) (1) (2) (3) (4) (5) (6) (7))) (B . ((B0) (B1))))
+                Passed: I=#hash((Int . ((-8) (-7) (-6) (-5) (-4) (-3) (-2) (-1) (0) (1) (2) (3) (4) (5) (6) (7))) ($v3 . ((A1))) ($v4 . ((B0))) (g . ((B0 A1) (B1 A0))) ($v1 . ((A0))) (A . ((A0) (A1))) ($v2 . ((B1))) (f . ((A0 B0) (A1 B1))) (B . ((B0) (B1))))
+                Testing: J=#hash((A . ((A0) (A1))) (f . ((A0 B1) (A1 B0) (A1 B1))) (g . ((B0 A0) (B1 A1))) (Int . ((-8) (-7) (-6) (-5) (-4) (-3) (-2) (-1) (0) (1) (2) (3) (4) (5) (6) (7))) (B . ((B0) (B1))))
+                Failed: No such I

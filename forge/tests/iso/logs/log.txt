@@ -1,0 +1,17 @@
+// this file tests that isoEx.rkt is equivalent with and without boundsy breaks
+
+[160] iso $ ./boundsytest.py isoEx.rkt 
+Testing: P ≅ Q for P="racket isoEx.rkt", Q="racket isoEx.rkt --boundsy 0"
+        Testing: ∀I(I⊧P => ∃J(J⊧Q and J≅I))
+                Testing: I=#hash((A . ((A0) (A1))) (f . ((A0 B0) (A1 B1))) (g . ((B0 A1) (B1 A0))) (Int . ((-8) (-7) (-6) (-5) (-4) (-3) (-2) (-1) (0) (1) (2) (3) (4) (5) (6) (7))) (B . ((B0) (B1))))
+                Passed: J=#hash((Int . ((-8) (-7) (-6) (-5) (-4) (-3) (-2) (-1) (0) (1) (2) (3) (4) (5) (6) (7))) ($v3 . ((A0))) ($v4 . ((B0))) (g . ((B0 A1) (B1 A0))) ($v1 . ((A1))) (A . ((A0) (A1))) ($v2 . ((B1))) (f . ((A0 B0) (A1 B1))) (B . ((B0) (B1))))
+                Testing: I=#hash((A . ((A0) (A1))) (f . ((A0 B0) (A1 B1))) (g . ((B0 A0) (B1 A1))) (Int . ((-8) (-7) (-6) (-5) (-4) (-3) (-2) (-1) (0) (1) (2) (3) (4) (5) (6) (7))) (B . ((B0) (B1))))
+                Passed: J=#hash((Int . ((-8) (-7) (-6) (-5) (-4) (-3) (-2) (-1) (0) (1) (2) (3) (4) (5) (6) (7))) ($v3 . ((A0))) ($v4 . ((B0))) (g . ((B0 A0) (B1 A1))) ($v1 . ((A1))) (A . ((A0) (A1))) ($v2 . ((B1))) (f . ((A0 B0) (A1 B1))) (B . ((B0) (B1))))
+        Passed: ∀I(I⊧P => ∃J(J⊧Q and J≅I))
+        Testing: ∀J(J⊧Q => ∃I(I⊧P and I≅J))
+                Testing: J=#hash((A . ((A0) (A1))) (f . ((A0 B1) (A1 B0))) (g . ((B0 A1) (B1 A0))) (Int . ((-8) (-7) (-6) (-5) (-4) (-3) (-2) (-1) (0) (1) (2) (3) (4) (5) (6) (7))) (B . ((B0) (B1))))
+                Passed: I=#hash((Int . ((-8) (-7) (-6) (-5) (-4) (-3) (-2) (-1) (0) (1) (2) (3) (4) (5) (6) (7))) ($v3 . ((A1))) ($v4 . ((B0))) (g . ((B0 A0) (B1 A1))) ($v1 . ((A0))) (A . ((A0) (A1))) ($v2 . ((B1))) (f . ((A0 B0) (A1 B1))) (B . ((B0) (B1))))
+                Testing: J=#hash((A . ((A0) (A1))) (f . ((A0 B0) (A1 B1))) (g . ((B0 A1) (B1 A0))) (Int . ((-8) (-7) (-6) (-5) (-4) (-3) (-2) (-1) (0) (1) (2) (3) (4) (5) (6) (7))) (B . ((B0) (B1))))
+                Passed: I=#hash((Int . ((-8) (-7) (-6) (-5) (-4) (-3) (-2) (-1) (0) (1) (2) (3) (4) (5) (6) (7))) ($v3 . ((A0))) ($v4 . ((B0))) (g . ((B0 A1) (B1 A0))) ($v1 . ((A1))) (A . ((A0) (A1))) ($v2 . ((B1))) (f . ((A0 B0) (A1 B1))) (B . ((B0) (B1))))
+        Passed: ∀J(J⊧Q => ∃I(I⊧P and I≅J))
+Passed: P ≅ Q for P="racket isoEx.rkt", Q="racket isoEx.rkt --boundsy 0"

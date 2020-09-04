@@ -26,3 +26,5 @@ forge/secrets
 
 forge/sterling-js
 !forge/sterling-js/dist
+
+__pycache__/
