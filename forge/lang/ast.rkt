@@ -28,6 +28,9 @@
 ;       * ...
 ;     * node/formula/quantified (TODO FILL)  -- quantified formula
 ;     * node/formula/multiplicity (TODO FILL) -- multiplicity formula
+;     * node/formula/sealed
+;       * wheat
+;       * chaff
 ;   * node/int -- integer expression
 ;     * node/int/op (children)
 ;       * node/int/op/add
@@ -514,8 +517,6 @@
 (define-syntax false (lambda (stx) (syntax-case stx ()    
     [val (identifier? (syntax val)) (quasisyntax/loc stx (node/formula/constant (nodeinfo #,(build-source-location stx)) 'false))])))
 
-
-
 ;; -- operators ----------------------------------------------------------------
 
 ; Should never be directly instantiated
@@ -694,6 +695,26 @@
      (quasisyntax/loc stx
        (let* ([x1 (node/expr/quantifier-var (nodeinfo #,(build-source-location stx)) (node/expr-arity r1) 'x1)] ...)
          (sum-quant-expr (nodeinfo #,(build-source-location stx)) (list (cons x1 r1) ...) int-expr)))]))
+
+;; -- sealing (for examplar) -----------------------------------------------------------
+
+(define (simple-write-proc str)
+  (lambda (v port mode)
+    (fprintf port "#<~a>" str)))
+
+(struct node/formula/sealed node/formula []
+  #:methods gen:custom-write [(define write-proc (simple-write-proc "node/formula/sealed"))])
+(struct wheat node/formula/sealed []
+  #:methods gen:custom-write [(define write-proc (simple-write-proc "wheat"))]
+  #:extra-constructor-name make-wheat)
+(struct chaff node/formula/sealed []
+  #:methods gen:custom-write [(define write-proc (simple-write-proc "chaff"))]
+  #:extra-constructor-name make-chaff)
+
+(define (unseal-node/formula x)
+  (if (node/formula/sealed? x)
+    (node-info x)
+    x))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

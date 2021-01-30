@@ -72,6 +72,7 @@
    ["as"        (token+ `AS-TOK "" lexeme "" lexeme-start lexeme-end)]
    ["assert"    (token+ `ASSERT-TOK "" lexeme "" lexeme-start lexeme-end)]    
    ["but"       (token+ `BUT-TOK "" lexeme "" lexeme-start lexeme-end)]
+   ["chaff"     (token+ `CHAFF-TOK "" lexeme "" lexeme-start lexeme-end)]
    ["check"     (token+ `CHECK-TOK "" lexeme "" lexeme-start lexeme-end)]  
    ["disj"      (token+ `DISJ-TOK "" lexeme "" lexeme-start lexeme-end)]  
    ["else"      (token+ `ELSE-TOK "" lexeme "" lexeme-start lexeme-end)]  
@@ -106,6 +107,7 @@
    ["two"       (token+ `TWO-TOK "" lexeme "" lexeme-start lexeme-end)]
    ["univ"      (token+ `UNIV-TOK "" lexeme "" lexeme-start lexeme-end)]
    ["unsat"     (token+ `UNSAT-TOK "" lexeme "" lexeme-start lexeme-end)]  
+   ["wheat"     (token+ `WHEAT-TOK "" lexeme "" lexeme-start lexeme-end)]
    ["break"     (token+ `BREAK-TOK "" lexeme "" lexeme-start lexeme-end)]  
 
    ["state"     (token+ `STATE-TOK "" lexeme "" lexeme-start lexeme-end)]

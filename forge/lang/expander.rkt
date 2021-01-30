@@ -213,9 +213,18 @@
               (~optional name:NameClass)
               block:BlockClass)))
 
-  ; PredDecl : /PRED-TOK (QualName DOT-TOK)? Name ParaDecls? Block
+  (define-syntax-class PredTypeClass
+    #:datum-literals (PredType)
+    #:attributes (sym)
+    (pattern (PredType "wheat")
+      #:attr sym #'wheat)
+    (pattern (PredType "chaff")
+      #:attr sym #'chaff))
+
+  ; PredDecl : /PRED-TOK PredType? (QualName DOT-TOK)? Name ParaDecls? Block
   (define-syntax-class PredDeclClass
     (pattern ((~literal PredDecl)
+              (~optional :PredTypeClass)
               (~optional (~seq prefix:QualNameClass "."))
               name:NameClass
               (~optional decls:ParaDeclsClass)
@@ -602,19 +611,21 @@
   [((~literal FactDecl) _ ...)
    (syntax/loc stx (raise "Facts are not allowed in #lang forge."))]))
 
-; PredDecl : /PRED-TOK (QualName DOT-TOK)? Name ParaDecls? Block
+; PredDecl : /PRED-TOK PredType? (QualName DOT-TOK)? Name ParaDecls? Block
 (define-syntax (PredDecl stx)
   (syntax-parse stx
-  [((~literal PredDecl) (~optional (~seq prefix:QualNameClass "."))
+  [((~literal PredDecl) (~optional t:PredTypeClass)
+                        (~optional (~seq prefix:QualNameClass "."))
                         name:NameClass
                         block:BlockClass)
    (with-syntax ([block (my-expand #'block)])
      (quasisyntax/loc stx (begin
        (~? (raise (format "Prefixes not allowed: ~a" 'prefix)))
        ; preserve stx location in Racket *sub*expression
-       #,(syntax/loc stx (pred name.name block)))))]
+       #,(syntax/loc stx (pred (~? t.sym) name.name block)))))]
 
-  [((~literal PredDecl) (~optional (~seq prefix:QualNameClass "."))
+  [((~literal PredDecl) (~optional t:PredTypeClass)
+                        (~optional (~seq prefix:QualNameClass "."))
                         name:NameClass
                         decls:ParaDeclsClass
                         block:BlockClass)
@@ -624,7 +635,7 @@
      (quasisyntax/loc stx (begin
        (~? (raise (format "Prefixes not allowed: ~a" 'prefix)))
        ; preserve stx location in Racket *sub*expression
-       #,(syntax/loc stx (pred decl block)))))]))
+       #,(syntax/loc stx (pred (~? t.sym) decl block)))))]))
 
 ; FunDecl : /FUN-TOK (QualName DOT-TOK)? Name ParaDecls? /COLON-TOK Expr Block
 (define-syntax (FunDecl stx)

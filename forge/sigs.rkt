@@ -386,24 +386,35 @@
         (~@ (check-temporal-for-var is-var true-name))
        (update-state! (state-add-relation curr-state true-name name true-sigs true-breaker))))]))
 
+(begin-for-syntax
+  (define-splicing-syntax-class pred-type
+    #:description "optional pred flag"
+    #:attributes ((seal 0))
+    (pattern (~datum wheat)
+      #:attr seal #'make-wheat)
+    (pattern (~datum chaff)
+      #:attr seal #'make-chaff)
+    (pattern (~seq)
+      #:attr seal #'values)))
+
 ; Declare a new predicate
 ; (pred info name cond ...)
 ; (pred info (name var ...) cond ...)
 ;   or same without info
 (define-syntax (pred stx)
   (syntax-parse stx
-    [(pred name:id conds:expr ...+)
+    [(pred t:pred-type name:id conds:expr ...+)
      (quasisyntax/loc stx
        (begin
          ; use srcloc of actual predicate, not this location in sigs
-         (define name (&&/info (nodeinfo #,(build-source-location stx)) conds ...))
+         (define name (t.seal (&&/info (nodeinfo #,(build-source-location stx)) conds ...)))
          (update-state! (state-add-pred curr-state 'name name))))]
-    [(pred (name:id args:id ...+) conds:expr ...+)
+    [(pred t:pred-type (name:id args:id ...+) conds:expr ...+)
      (quasisyntax/loc stx
-       (begin 
-         (define (name args ...) (&&/info (nodeinfo #,(build-source-location stx)) conds ...))
+       (begin
+         (define (name args ...) (t.seal (&&/info (nodeinfo #,(build-source-location stx)) conds ...)))
          (update-state! (state-add-pred curr-state 'name name))))]))
-                                   
+
 ; Declare a new function
 ; (fun (name var ...) result)
 (define-syntax (fun stx)
@@ -576,7 +587,7 @@
   (syntax-parse stx
     [(with (ids:id ... #:from module-name) exprs ...+)
       #'(let ([temp-state curr-state])
-          (define ids (dynamic-require module-name 'ids)) ...
+          (define ids (unseal-node/formula (dynamic-require module-name 'ids))) ...
           (define result
             (let () exprs ...))
           (update-state! temp-state)

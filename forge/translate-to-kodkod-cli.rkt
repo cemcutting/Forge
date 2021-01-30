@@ -42,6 +42,8 @@
      (print-cmd-cont ") ")
      (interpret-formula run-or-state form relations atom-names new-quantvars)
      (print-cmd-cont ")")]
+    [(node/formula/sealed info)
+     (interpret-formula info relations atom-names quantvars)]
 
      ; (let ([quantvars (cons var quantvars)])
      ;   ( print-cmd-cont (format "(~a ([~a : ~a " quantifier (v (get-var-idx var quantvars)) (if (@> (node/expr-arity var) 1) "set" "one")))

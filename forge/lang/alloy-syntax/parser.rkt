@@ -37,7 +37,8 @@ Decl : DISJ-TOK? NameList /COLON-TOK DISJ-TOK? SET-TOK? Expr
 ; Remember that a preceding / means to cut the token; it won't get included in the AST.
 ArrowDecl : DISJ-TOK? VAR-TOK? NameList /COLON-TOK DISJ-TOK? ArrowMult ArrowExpr
 FactDecl : FACT-TOK Name? Block
-PredDecl : /PRED-TOK (QualName DOT-TOK)? Name ParaDecls? Block
+PredType : WHEAT-TOK | CHAFF-TOK
+PredDecl : /PRED-TOK PredType? (QualName DOT-TOK)? Name ParaDecls? Block
 FunDecl : /FUN-TOK (QualName DOT-TOK)? Name ParaDecls? /COLON-TOK Expr Block
 ParaDecls : /LEFT-PAREN-TOK @DeclList? /RIGHT-PAREN-TOK 
           | /LEFT-SQUARE-TOK @DeclList? /RIGHT-SQUARE-TOK
