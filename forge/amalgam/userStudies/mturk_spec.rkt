@@ -56,7 +56,8 @@ example tryingBreakingInstance is not weHangSimulation for {
     NetworkUser = NetworkUser0 + NetworkUser1 + NetworkUser2 + NetworkOwner0
     No = No0
     Yes = Yes0
-    follows = NetworkOwner0->NetworkUser0 + NetworkOwner0->NetworkUser1 + NetworkOwner0->NetworkUser2 + NetworkUser0->NetworkUser2 + NetworkUser2->NetworkUser0 + NetworkUser2->NetworkUser1
+    follows = NetworkOwner0->NetworkUser0 + NetworkOwner0->NetworkUser1 + NetworkOwner0->NetworkUser2 +
+              NetworkUser0->NetworkUser2 + NetworkUser2->NetworkUser0 + NetworkUser2->NetworkUser1
     isVerified = NetworkOwner0->Yes + NetworkUser0->Yes + NetworkUser1->No + NetworkUser2->No
     hasProfilePic = NetworkOwner0->Yes + NetworkUser0->Yes + NetworkUser1->Yes + NetworkUser2->No
 }
@@ -71,5 +72,23 @@ example tryingBreakingInstance2 is  weHangSimulation for {
     hasProfilePic = NetworkOwner0->Yes + NetworkUser0->Yes + NetworkUser1->Yes + NetworkUser2->No
 }
 
---run weHangSimulation for exactly 4 NetworkUser, 4 Int
+
+-- ~instance 6 or so for Tim on PC
+test expect {
+    shouldBeUnsat: {weHangSimulation} for {
+      NetworkOwner = NetworkOwner0
+      NetworkUser = NetworkUser0 + NetworkUser1 + NetworkUser2 + NetworkOwner0
+      No = No0
+      Yes = Yes0
+      follows = NetworkOwner0->NetworkUser0 + NetworkOwner0->NetworkUser1 + NetworkOwner0->NetworkUser2 +
+                NetworkUser0->NetworkUser2 + NetworkUser2->NetworkUser0 + NetworkUser2->NetworkUser1
+                -- removed NetworkUSer1->NetworkUser0
+      isVerified = NetworkOwner0->Yes + NetworkUser0->Yes + NetworkUser1->No + NetworkUser2->Yes
+      hasProfilePic = NetworkOwner0->Yes + NetworkUser0->Yes + NetworkUser1->No + NetworkUser2->Yes
+    } is unsat
+}
+
+
+option verbose 2
+run weHangSimulation for exactly 4 NetworkUser, 4 Int
 

@@ -10,7 +10,7 @@
 ;(require "amalgam/userStudies/KittyBacon.rkt")
 (require racket/hash)
 (require (prefix-in @ racket/set))
-(require (prefix-in @ (only-in racket -> >=)))
+(require (prefix-in @ (only-in racket -> >= >)))
 
 (require (only-in "amalgam/desugar/desugar_helpers.rkt" tup2Expr))
 (require forge/sigs-structs
@@ -224,6 +224,8 @@
 
   ; and together all of your predicates to get our formula F
   (define F (foldl (lambda (f acc) (and f acc)) (first Fs) (rest Fs)))
+  (when (equal? (car tup) '(NetworkUser1 NetworkUser0))
+      (printf "*** LN : F=~a~n" F))
   
   (define state (Run-spec-state spec))
   (define orig-scope (Run-spec-scope spec))
@@ -309,10 +311,12 @@
                                                orig-run))          
           (define curr
             (filter-map (lambda (tuple)
-                          (when (@>= (get-verbosity) VERBOSITY_DEBUG)
-                            (printf "Current tuple is ~a~n" tuple))      
+                          (when (@> (get-verbosity) VERBOSITY_LOW)
+                            (printf "LN: considering tuple: ~a in ~a~n" tuple name))      
                           (define present
                             (andmap (lambda (atomsym) (member (list atomsym) evaluated-univ)) tuple))
+                          (when (and (not present) (@> (get-verbosity) VERBOSITY_LOW))
+                            (printf "LN:   disregarding tuple as some atom wasn't present in the instance's univ~n"))
                           (if (and present (is-locally-necessary (cons tuple name) orig-run))
                               (cons tuple (Relation-rel r))
                               #f))
