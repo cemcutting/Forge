@@ -34,13 +34,14 @@
             (format "~a" atom))))
       (values relation-name stringified-atoms))))
 
-(define-syntax-rule (test name args ... #:expect expected)
+(define-simple-macro (test name args ... #:expect expected)
+  #:with command-str (format "~a" (syntax->datum #'(test name args ... #:expected expected)))
   (cond 
     [(member 'expected '(sat unsat))
      (unlogged:run name args ...)
      (define first-instance (stream-first (forge:Run-result name)))
      (define passed (equal? (if (Sat? first-instance) 'sat 'unsat) 'expected))
-     (logging:log-test name 'expected passed '(test name args ... #:expected expected)
+     (logging:log-test name 'expected passed 'command-str
                        (if (Sat? first-instance)
                            (get-sat-data first-instance)
                            (get-unsat-data first-instance)))
@@ -57,7 +58,7 @@
     [(equal? 'expected 'theorem)
      (unlogged:check name args ...)
      (define first-instance (stream-first (forge:Run-result name)))
-     (logging:log-test name 'theorem (Unsat? first-instance) '(test name args ... #:expected expected)
+     (logging:log-test name 'theorem (Unsat? first-instance) 'command-str
                             (if (Sat? first-instance)
                                 (get-sat-data first-instance)
                                 (get-unsat-data first-instance)))
@@ -70,11 +71,12 @@
                          'expected))]))
 
 (define-simple-macro (example name:id ex-pred ex-bounds ...)
+  #:with command-str (format "~a" (syntax->datum #'(example name ex-pred ex-bounds ...)))
   (let ()
     (unlogged:run name #:preds [ex-pred]
                        #:bounds [ex-bounds ...])
     (define first-instance (stream-first (forge:Run-result name)))
-    (logging:log-test name 'example (Sat? first-instance) '(example name ex-pred ex-bounds ...)
+    (logging:log-test name 'example (Sat? first-instance) 'command-str
                            (hash 'pred (format "~a" 'ex-pred)
                                  'bounds (for/list ([bound '(ex-bounds ...)]) (format "~a" bound))))
     (unless (Sat? first-instance)

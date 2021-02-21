@@ -276,7 +276,7 @@
 ;             "bounds": ["..."],
 ;         },
 ; }
-(define (log-test test expected passed command data)
+(define (log-test test expected passed command-str data)
   (when (logging-on?)
 
     (define sigs (map (compose symbol->string Sig-name)
@@ -285,7 +285,7 @@
                            (get-relations test)))
 
     (write-log (hash 'log-type "test"
-                     'raw (format "~a" command)
+                     'raw command-str
                      'expected (symbol->string expected)
                      'passed passed
                      'data data
