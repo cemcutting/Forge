@@ -163,7 +163,7 @@
                [inst-map new-state-inst-map]))
 
 (define (set-option! option value)
-  (cond [(or (equal? option 'verbosity)
+  (cond [(@or (equal? option 'verbosity)
              (equal? option 'verbose))
          (set-verbosity value)]
         [else
@@ -175,7 +175,7 @@
   (define options (State-options state))
 
   (define option-types
-    (hash 'solver (lambda (x) (or (symbol? x) (string? x))) ; allow for custom solver path
+    (hash 'solver (lambda (x) (@or (symbol? x) (string? x))) ; allow for custom solver path
           'backend symbol?
           ; 'verbosity exact-nonnegative-integer?
           'sb exact-nonnegative-integer?
@@ -287,22 +287,23 @@
     (quasisyntax/loc stx
       (begin
         (define true-name 'name)
-        (define true-one (~? (~@ (or #t 'one-kw)) (~@ #f)))
-        (define true-abstract (~? (~@ (or #t 'abstract-kw)) (~@ #f)))
+        (define true-one (~? (~@ (@or #t 'one-kw)) (~@ #f)))
+        (define true-abstract (~? (~@ (@or #t 'abstract-kw)) (~@ #f)))
         (define true-parent (~? (Sig-name (get-sig curr-state parent))
                                 #f))
         (define name (build-relation #,(build-source-location stx)
                                        (list (symbol->string true-name))
-                                       (symbol->string (or true-parent 'univ))
+                                       (symbol->string (@or true-parent 'univ))
                                        (symbol->string true-name)
                                        is-var))
-        ;make sure it isn't a var sig if not in temporal mode
-        (~@ (check-temporal-for-var is-var true-name))
-        ;Currently when lang/expander.rkt calls sig with #:in,
-        ;super-sig is #'(raise "Extending with in not yet implemented.")
-        ;This is just here for now to make sure that error is raised.
-        (~? super-sig)
-        (update-state! (state-add-sig curr-state true-name name true-one true-abstract true-parent))))]))
+        (void
+          ;make sure it isn't a var sig if not in temporal mode
+          (~@ (check-temporal-for-var is-var true-name))
+          ;Currently when lang/expander.rkt calls sig with #:in,
+          ;super-sig is #'(raise "Extending with in not yet implemented.")
+          ;This is just here for now to make sure that error is raised.
+          (~? super-sig)
+          (update-state! (state-add-sig curr-state true-name name true-one true-abstract true-parent)))))]))
 
 (define-syntax (relation stx)
   (syntax-parse stx
@@ -402,33 +403,18 @@
 
         (~? (set! run-state (state-set-option run-state 'solver 'solver-choice)))
         (~? (set! run-state (state-set-option run-state 'backend 'backend-choice)))
-        
 
         (define sig-scopes (~? 
-          (~@
-            (for/hash ([name (list (Sig-name (get-sig curr-state sig)) ...)]
-                       [lo (list lower ...)]
-                       [hi (list upper ...)])
-              (values name (Range lo hi))))
+          (make-sig-scopes (list (Sig-name (get-sig curr-state sig)) ...)
+                           (list lower ...)
+                           (list upper ...)
+                           name)
           (~@ (hash))))
-        (define bitwidth (if (hash-has-key? sig-scopes 'Int)
-                             (begin0 (Range-upper (hash-ref sig-scopes 'Int))
-                                     (set! sig-scopes (hash-remove sig-scopes 'Int)))
-                             #f))
-        (define default-sig-scope (if (hash-has-key? sig-scopes 'default)
-                                      (begin0 (hash-ref sig-scopes 'default)
-                                              (set! sig-scopes (hash-remove sig-scopes 'default)))
-                                      #f))
+        (define bitwidth (make-bitwidth sig-scopes))
+        (define default-sig-scope (make-default-sig-scope sig-scopes))
         (define base-scope (Scope default-sig-scope bitwidth sig-scopes))
+        (define default-bound (make-default-bound bitwidth))
 
-        (define default-bound
-          (let* ([max-int (expt 2 (sub1 (or bitwidth DEFAULT-BITWIDTH)))]
-                 [ints (map int-atom (range (- max-int) max-int))]
-                 [succs (map list (reverse (rest (reverse ints)))
-                                    (rest ints))])
-            (Bound (hash)
-                   (hash 'Int (map list ints)
-                         'succ succs))))
         (define (run-inst scope bounds)
           (for ([sigg (get-sigs run-state)])
             (when (Sig-one sigg)
@@ -445,7 +431,7 @@
               #f))
         (~? (unless (member 'target-distance '(close far))
               (raise (format "Target distance expected one of (close, far); got ~a." 'target-distance))))
-        (when (~? (or #t 'target-contrast) #f)
+        (when (~? (@or #t 'target-contrast) #f)
           (set! run-preds (~? (list (! (and preds ...))) (~? (list (! pred)) (list false)))))
 
         (define run-command #'#,command)        
@@ -455,6 +441,33 @@
         
         (define name (Run run-name run-command run-spec run-result server-ports atoms kodkod-currents kodkod-bounds))
         (update-state! (state-add-runmap curr-state 'name name)))]))
+
+(define (make-sig-scopes sig* lo* hi* name)
+  (for/hash ([name (in-list sig*)]
+           [lo (in-list lo*)]
+           [hi (in-list hi*)])
+  (values name (Range lo hi))))
+
+(define (make-bitwidth sig-scopes)
+  (if (hash-has-key? sig-scopes 'Int)
+      (begin0 (Range-upper (hash-ref sig-scopes 'Int))
+              (set! sig-scopes (hash-remove sig-scopes 'Int)))
+      #f))
+
+(define (make-default-sig-scope sig-scopes)
+  (if (hash-has-key? sig-scopes 'default)
+    (begin0 (hash-ref sig-scopes 'default)
+            (set! sig-scopes (hash-remove sig-scopes 'default)))
+    #f))
+
+(define (make-default-bound bitwidth)
+  (let* ([max-int (expt 2 (sub1 (@or bitwidth DEFAULT-BITWIDTH)))]
+         [ints (map int-atom (range (- max-int) max-int))]
+         [succs (map list (reverse (rest (reverse ints)))
+                            (rest ints))])
+    (Bound (hash)
+           (hash 'Int (map list ints)
+                 'succ succs))))
 
 ; Test that a spec is sat or unsat
 ; (test name
